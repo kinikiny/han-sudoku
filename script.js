@@ -1,6 +1,3 @@
-Exit code: 0
-Wall time: 1.3 seconds
-Output:
 const boardEl = document.querySelector('#board');
 const timerEl = document.querySelector('#timer');
 const difficultyEl = document.querySelector('#difficulty');
@@ -198,4 +195,3 @@ difficultyEl.addEventListener('change', () => { difficultyLabel.textContent = la
 document.addEventListener('keydown', e => { if (/^[1-9]$/.test(e.key)) enterNumber(Number(e.key)); else if (['Backspace','Delete','0'].includes(e.key)) erase(); else if (['n','m'].includes(e.key.toLowerCase()) && !e.target.matches('input')) { state.noteMode = !state.noteMode; updateControls(); save(); toast(`硫붾え 紐⑤뱶 ${state.noteMode ? 'ON' : 'OFF'}`); } else if (state.selected !== null && e.key.startsWith('Arrow')) { e.preventDefault(); const r=Math.floor(state.selected/9), c=state.selected%9; if(e.key==='ArrowUp'&&r)state.selected-=9;if(e.key==='ArrowDown'&&r<8)state.selected+=9;if(e.key==='ArrowLeft'&&c)state.selected--;if(e.key==='ArrowRight'&&c<8)state.selected++;render(); } });
 setInterval(() => { if (state.running) { state.seconds++; timerEl.textContent = formatTime(state.seconds); if (!(state.seconds % 10)) save(); } }, 1000);
 if (!load()) newGame(); else { timerEl.textContent = formatTime(state.seconds); document.querySelector('#nickname').value = state.nickname || randomNickname(); document.querySelector('#startOverlay').hidden = false; syncStartDifficulty(); document.querySelector('#soundButton').classList.toggle('active', state.sound); render(); renderRanking(); }
-
