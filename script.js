@@ -7,12 +7,12 @@ const STORAGE_KEY = 'haru-sudoku-v3';
 const RANKING_KEY = 'haru-sudoku-rankings-v1';
 
 const state = { solution: [], puzzle: [], values: [], notes: [], selected: null, history: [], hints: 3, noteMode: false, seconds: 0, running: false, started: false, nickname: '', sound: false, difficulty: 'medium' };
-const labels = { easy: '?ъ?', medium: '蹂댄넻', hard: '?대젮?' };
+const labels = { easy: '쉬움', medium: '보통', hard: '어려움' };
 const holes = { easy: 38, medium: 46, hard: 54 };
-const blockedNicknameWords = ['?쒕컻','?⑤컻','蹂묒떊','媛쒖깉','?덈겮','吏??,'爰쇱졇','fuck','shit','bitch'];
+const blockedNicknameWords = ['시발','씨발','병신','개새','새끼','지랄','꺼져','fuck','shit','bitch'];
 const nicknameWords = {
-  first: ['?먭툔??,'珥앸챸??,'諛섏쭩?대뒗','李⑤텇??,'?⑷컧??,'?ㅼ젙??,'?щ튌瑜?,'?몃Ⅸ'],
-  second: ['?섎떖','李몄깉','怨좎뼇??,'?ъ슦','?먮떎','?좊겮','遺?됱씠','?뚭퀬??]
+  first: ['느긋한','총명한','반짝이는','차분한','용감한','다정한','재빠른','푸른'],
+  second: ['수달','참새','고양이','여우','판다','토끼','부엉이','돌고래']
 };
 
 function randomNickname() {
@@ -71,12 +71,12 @@ function newGame() {
 }
 function startGame() {
   const input = document.querySelector('#nickname'), nickname = input.value.trim();
-  if (!nickname) { input.focus(); return toast('?됰꽕?꾩쓣 ?낅젰??二쇱꽭??'); }
+  if (!nickname) { input.focus(); return toast('닉네임을 입력해 주세요.'); }
   if (blockedNicknameWords.some(word => nickname.toLowerCase().includes(word))) {
-    const warning = document.querySelector('#nicknameWarning'); warning.classList.add('error'); warning.textContent = '?ъ슜?????녿뒗 ?쒗쁽???ы븿?섏뼱 ?덉뼱?? ?ㅻⅨ ?됰꽕?꾩쓣 ?낅젰??二쇱꽭??'; input.focus(); return toast('?됰꽕?꾩쓣 ?ㅼ떆 ?뺤씤??二쇱꽭??');
+    const warning = document.querySelector('#nicknameWarning'); warning.classList.add('error'); warning.textContent = '사용할 수 없는 표현이 포함되어 있어요. 다른 닉네임을 입력해 주세요.'; input.focus(); return toast('닉네임을 다시 확인해 주세요.');
   }
   state.nickname = nickname; state.started = true; state.running = true;
-  document.querySelector('#startOverlay').hidden = true; save(); toast(`${nickname}?섏쓽 湲곕줉 痢≪젙???쒖옉?⑸땲??`);
+  document.querySelector('#startOverlay').hidden = true; save(); toast(`${nickname}님의 기록 측정을 시작합니다!`);
 }
 function render() {
   boardEl.innerHTML = '';
@@ -100,7 +100,7 @@ function render() {
       for (let n = 1; n <= 9; n++) notes.innerHTML += `<i>${state.notes[i].includes(n) ? n : ''}</i>`;
       cell.append(notes);
     }
-    cell.setAttribute('aria-label', `${row + 1}??${col + 1}??{value ? `, ${value}` : ', 鍮덉뭏'}`);
+    cell.setAttribute('aria-label', `${row + 1}행 ${col + 1}열${value ? `, ${value}` : ', 빈칸'}`);
     cell.addEventListener('click', () => { state.selected = i; render(); });
     boardEl.append(cell);
   });
@@ -131,7 +131,7 @@ function erase() {
 }
 function undo() { const last = state.history.pop(); if (!last || !state.running) return; state.values = last.values; state.notes = last.notes; render(); save(); }
 function hint() {
-  if (!state.hints || !state.running) return toast('?ъ슜?????덈뒗 ?뚰듃媛 ?놁뼱??');
+  if (!state.hints || !state.running) return toast('사용할 수 있는 힌트가 없어요.');
   const candidates = state.values.map((v,i) => v !== state.solution[i] ? i : -1).filter(i => i >= 0);
   if (!candidates.length) return;
   const i = candidates[Math.floor(Math.random()*candidates.length)]; state.history.push(snapshot()); state.values[i] = state.solution[i]; state.notes[i] = []; state.selected = i; state.hints--; clearPeerNotes(i, state.values[i]);
@@ -150,12 +150,12 @@ function updateControls() {
   difficultyEl.disabled = state.running;
   const noteBtn = document.querySelector('#noteButton'); noteBtn.classList.toggle('active', state.noteMode); noteBtn.setAttribute('aria-pressed', state.noteMode); noteBtn.querySelector('b').textContent = state.noteMode ? 'ON' : 'OFF';
   const quickNote = document.querySelector('#quickNoteButton'); quickNote.classList.toggle('active', state.noteMode); quickNote.setAttribute('aria-pressed', state.noteMode); quickNote.querySelector('b').textContent = state.noteMode ? 'ON' : 'OFF';
-  document.querySelectorAll('[data-number]').forEach(button => { const number = Number(button.dataset.number); const complete = state.values.every((value,i) => state.solution[i] !== number || value === number); button.classList.toggle('completed', complete); button.setAttribute('aria-label', complete ? `${number}, ?꾨즺` : String(number)); });
+  document.querySelectorAll('[data-number]').forEach(button => { const number = Number(button.dataset.number); const complete = state.values.every((value,i) => state.solution[i] !== number || value === number); button.classList.toggle('completed', complete); button.setAttribute('aria-label', complete ? `${number}, 완료` : String(number)); });
   document.querySelector('#undoButton').disabled = !state.history.length;
 }
 function checkComplete() {
   if (state.values.every((v,i) => v === state.solution[i])) {
-    state.running = false; addRanking(); document.querySelector('#completeMessage').textContent = `${state.nickname}?? ${formatTime(state.seconds)} 留뚯뿉 ?꾩꽦?덉뒿?덈떎.`; overlay.hidden = false; beep(523); setTimeout(() => beep(659), 100); setTimeout(() => beep(784), 200); save();
+    state.running = false; addRanking(); document.querySelector('#completeMessage').textContent = `${state.nickname}님, ${formatTime(state.seconds)} 만에 완성했습니다.`; overlay.hidden = false; beep(523); setTimeout(() => beep(659), 100); setTimeout(() => beep(784), 200); save();
   }
 }
 function getRankings() { try { return JSON.parse(localStorage.getItem(RANKING_KEY)) || {easy:[],medium:[],hard:[]}; } catch { return {easy:[],medium:[],hard:[]}; } }
@@ -183,15 +183,15 @@ function beep(freq = 300) { if (!state.sound) return; const ctx = new (window.Au
 document.querySelectorAll('[data-number]').forEach(b => b.addEventListener('click', () => enterNumber(Number(b.dataset.number))));
 document.querySelector('#newGame').addEventListener('click', newGame); document.querySelector('#overlayNewGame').addEventListener('click', newGame);
 document.querySelector('#startButton').addEventListener('click', startGame); document.querySelector('#nickname').addEventListener('keydown', e => { if (e.key === 'Enter') startGame(); });
-document.querySelector('#nickname').addEventListener('input', () => { const warning = document.querySelector('#nicknameWarning'); warning.classList.remove('error'); warning.textContent = '媛쒖씤?뺣낫 蹂댄샇瑜??꾪빐 ?ㅻ챸?대굹 遺덉풄媛먯쓣 二쇰뒗 ?쒗쁽? ?ъ슜?섏? 留덉꽭??'; });
+document.querySelector('#nickname').addEventListener('input', () => { const warning = document.querySelector('#nicknameWarning'); warning.classList.remove('error'); warning.textContent = '개인정보 보호를 위해 실명이나 불쾌감을 주는 표현은 사용하지 마세요.'; });
 document.querySelectorAll('[data-start-difficulty]').forEach(button => button.addEventListener('click', () => {
   difficultyEl.value = button.dataset.startDifficulty; state.difficulty = button.dataset.startDifficulty; newGame();
 }));
 document.querySelector('#eraseButton').addEventListener('click', erase); document.querySelector('#undoButton').addEventListener('click', undo); document.querySelector('#hintButton').addEventListener('click', hint);
 document.querySelector('#noteButton').addEventListener('click', () => { state.noteMode = !state.noteMode; updateControls(); save(); });
 document.querySelector('#quickNoteButton').addEventListener('click', () => { state.noteMode = !state.noteMode; updateControls(); save(); });
-document.querySelector('#soundButton').addEventListener('click', e => { state.sound = !state.sound; e.currentTarget.classList.toggle('active', state.sound); e.currentTarget.setAttribute('aria-label', state.sound ? '?④낵???꾧린' : '?④낵??耳쒓린'); beep(440); save(); });
+document.querySelector('#soundButton').addEventListener('click', e => { state.sound = !state.sound; e.currentTarget.classList.toggle('active', state.sound); e.currentTarget.setAttribute('aria-label', state.sound ? '효과음 끄기' : '효과음 켜기'); beep(440); save(); });
 difficultyEl.addEventListener('change', () => { difficultyLabel.textContent = labels[difficultyEl.value]; state.difficulty = difficultyEl.value; syncStartDifficulty(); renderRanking(); });
-document.addEventListener('keydown', e => { if (/^[1-9]$/.test(e.key)) enterNumber(Number(e.key)); else if (['Backspace','Delete','0'].includes(e.key)) erase(); else if (['n','m'].includes(e.key.toLowerCase()) && !e.target.matches('input')) { state.noteMode = !state.noteMode; updateControls(); save(); toast(`硫붾え 紐⑤뱶 ${state.noteMode ? 'ON' : 'OFF'}`); } else if (state.selected !== null && e.key.startsWith('Arrow')) { e.preventDefault(); const r=Math.floor(state.selected/9), c=state.selected%9; if(e.key==='ArrowUp'&&r)state.selected-=9;if(e.key==='ArrowDown'&&r<8)state.selected+=9;if(e.key==='ArrowLeft'&&c)state.selected--;if(e.key==='ArrowRight'&&c<8)state.selected++;render(); } });
+document.addEventListener('keydown', e => { if (/^[1-9]$/.test(e.key)) enterNumber(Number(e.key)); else if (['Backspace','Delete','0'].includes(e.key)) erase(); else if (['n','m'].includes(e.key.toLowerCase()) && !e.target.matches('input')) { state.noteMode = !state.noteMode; updateControls(); save(); toast(`메모 모드 ${state.noteMode ? 'ON' : 'OFF'}`); } else if (state.selected !== null && e.key.startsWith('Arrow')) { e.preventDefault(); const r=Math.floor(state.selected/9), c=state.selected%9; if(e.key==='ArrowUp'&&r)state.selected-=9;if(e.key==='ArrowDown'&&r<8)state.selected+=9;if(e.key==='ArrowLeft'&&c)state.selected--;if(e.key==='ArrowRight'&&c<8)state.selected++;render(); } });
 setInterval(() => { if (state.running) { state.seconds++; timerEl.textContent = formatTime(state.seconds); if (!(state.seconds % 10)) save(); } }, 1000);
 if (!load()) newGame(); else { timerEl.textContent = formatTime(state.seconds); document.querySelector('#nickname').value = state.nickname || randomNickname(); document.querySelector('#startOverlay').hidden = false; syncStartDifficulty(); document.querySelector('#soundButton').classList.toggle('active', state.sound); render(); renderRanking(); }
